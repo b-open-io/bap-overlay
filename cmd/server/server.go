@@ -47,6 +47,7 @@ type subRequest struct {
 var subscribe = make(chan *subRequest, 100)   // Buffered channel
 var unsubscribe = make(chan *subRequest, 100) // Buffered channel
 func init() {
+	log.Print("Initializing server...")
 	godotenv.Load("../../.env")
 	chaintracker = headers_client.Client{
 		Url:    os.Getenv("BLOCK_HEADERS_URL"),
