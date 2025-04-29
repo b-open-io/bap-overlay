@@ -4,6 +4,12 @@ github.com/GorillaPool/go-junglebus v0.2.14 h1:dnGU3LIZ21JiHeeSRW0Yn5xvSHKgiN0T/
 github.com/GorillaPool/go-junglebus v0.2.14/go.mod h1:EMAAnFQbBQB7xLe7DdLTLbescKUudflsXT0CqlSeWgQ=
 github.com/andybalholm/brotli v1.1.1 h1:PR2pgnyFznKEugtsUo0xLdDop5SKXd5Qf5ysW+7XdTA=
 github.com/andybalholm/brotli v1.1.1/go.mod h1:05ib4cKhjx3OQYUY22hTVd34Bc8upXjOLL2rKwwZBoA=
+github.com/b-open-io/go-sdk v1.1.22-0.20250429153431-0a7620b47c68 h1:ohI5LomJdQRg8ecwV6T0jgnjmkX74Tpz7INkqdbuIQE=
+github.com/b-open-io/go-sdk v1.1.22-0.20250429153431-0a7620b47c68/go.mod h1:oM0t+xHwGxTLu5l5iUNceiv/MpQJXJdJKsFwpEgDVLI=
+github.com/b-open-io/go-templates v0.0.0-20250429144338-87ffb904e7f0 h1:8OdbBC4i6JfQZdrx8tg/tFjR52Vwf/KuA2ZCwvEwJ9g=
+github.com/b-open-io/go-templates v0.0.0-20250429144338-87ffb904e7f0/go.mod h1:CQCMZGDNXHdLY9RibFKRAjAJP4tJkg3R0sYpKFmXoR0=
+github.com/b-open-io/overlay v0.0.0-20250429210952-102a532767c6 h1:19LMsdtmIJLB6U6qUGVJ6awVAl6Tvt7GH3TJQs2PmZ4=
+github.com/b-open-io/overlay v0.0.0-20250429210952-102a532767c6/go.mod h1:j4uGW5oxhSj4DBIfdlKyi8PmEqOw1XAzLHyNXeFkw2I=
 github.com/bitcoinschema/go-bpu v0.2.2 h1:F/eIC8XhzwgptpA1+rgYQo8bzT51nVozdXpASsxPIno=
 github.com/bitcoinschema/go-bpu v0.2.2/go.mod h1:zppAI/4uAi+lSKBAc7QtWp98d+iczCB6CnGrGV75fAQ=
 github.com/bitcoinschema/go-sigma v0.1.2 h1:tFNlZZ8QnSokHlWL/39+NCzC1x2lTO3uOJhcvBkC1TE=

@@ -59,11 +59,14 @@ replace github.com/4chain-ag/go-overlay-services => github.com/4chain-ag/go-over
 
 // replace github.com/4chain-ag/go-overlay-services => ../go-overlay-services
 
-// replace github.com/bsv-blockchain/go-sdk => github.com/b-open-io/go-sdk v1.1.22-0.20250406003733-6a6b9ac5b847
-replace github.com/bsv-blockchain/go-sdk => ../go-sdk
+replace github.com/bsv-blockchain/go-sdk => github.com/b-open-io/go-sdk v1.1.22-0.20250429153431-0a7620b47c68
 
-replace github.com/bitcoin-sv/go-templates => ../go-templates
+// replace github.com/bsv-blockchain/go-sdk => ../go-sdk
 
-// replace github.com/b-open-io/overlay => github.com/b-open-io/overlay v0.0.0-20250415204359-d75a902c8e56
+replace github.com/bitcoin-sv/go-templates => github.com/b-open-io/go-templates v0.0.0-20250429144338-87ffb904e7f0
 
-replace github.com/b-open-io/overlay => ../overlay
+// replace github.com/bitcoin-sv/go-templates => ../go-templates
+
+replace github.com/b-open-io/overlay => github.com/b-open-io/overlay v0.0.0-20250429210952-102a532767c6
+
+// replace github.com/b-open-io/overlay => ../overlay
