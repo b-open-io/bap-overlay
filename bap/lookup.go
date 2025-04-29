@@ -36,6 +36,10 @@ func (l *LookupService) OutputAdded(ctx context.Context, outpoint *overlay.Outpo
 	if bc == nil {
 		return nil
 	}
+	var height uint32
+	if tx.MerklePath != nil {
+		height = tx.MerklePath.BlockHeight
+	}
 
 	bap := bitcom.DecodeBAP(bc)
 	if bap == nil {
@@ -66,14 +70,17 @@ func (l *LookupService) OutputAdded(ctx context.Context, outpoint *overlay.Outpo
 					{
 						Address: bap.Address,
 						Txid:    outpoint.Txid,
+						Block:   height,
 					},
 				},
+				FirstSeen: height,
 			}
 		} else {
 			id.CurrentAddress = aip.Address
 			id.Addresses = append(id.Addresses, Address{
 				Address: bap.Address,
 				Txid:    outpoint.Txid,
+				Block:   height,
 			})
 		}
 		if err := l.storage.SaveIdentity(ctx, id); err != nil {
@@ -125,7 +132,9 @@ func (l *LookupService) OutputAdded(ctx context.Context, outpoint *overlay.Outpo
 			return fmt.Errorf("identity not found for address %s", aip.Address)
 		}
 		if len(bap.Profile) > 0 && bap.IDKey == id.IDKey {
-			l.storage.SaveProfile(ctx, bap.IDKey, bap.Profile)
+			if err := l.storage.SaveProfile(ctx, bap.IDKey, bap.Profile); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
