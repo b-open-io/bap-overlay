@@ -10,7 +10,7 @@ import (
 
 	"github.com/4chain-ag/go-overlay-services/pkg/core/engine"
 	"github.com/GorillaPool/go-junglebus"
-	"github.com/b-open-io/bap-overlay/opns"
+	"github.com/b-open-io/bap-overlay/bap"
 	"github.com/b-open-io/overlay/storage"
 	"github.com/b-open-io/overlay/util"
 	"github.com/bsv-blockchain/go-sdk/chainhash"
@@ -67,29 +67,32 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to initialize tx storage: %v", err)
 	}
-	storage, err := storage.NewRedisStorage(os.Getenv("REDIS"), txStore)
+	store, err := storage.NewRedisStorage(os.Getenv("REDIS"), txStore)
 	if err != nil {
 		log.Fatalf("Failed to initialize storage: %v", err)
 	}
-	defer storage.Close()
+	defer store.Close()
+	bapStorage := &bap.BAPStorage{RedisStorage: store}
+	tm := "tm_bap"
 
-	lookupService, err := opns.NewLookupService(
+	lookupService, err := bap.NewLookupService(
 		os.Getenv("REDIS"),
-		storage,
-		"tm_OpNS",
+		bapStorage,
+		tm,
 	)
 	if err != nil {
 		log.Fatalf("Failed to initialize lookup service: %v", err)
 	}
-	tm := "tm_OpNS"
 	e := engine.Engine{
 		Managers: map[string]engine.TopicManager{
-			tm: &opns.TopicManager{},
+			tm: &bap.TopicManager{
+				Storage: bapStorage,
+			},
 		},
 		LookupServices: map[string]engine.LookupService{
-			"ls_OpNS": lookupService,
+			"ls_bap": lookupService,
 		},
-		Storage:      storage,
+		Storage:      store,
 		ChainTracker: chaintracker,
 		PanicOnError: true,
 	}
@@ -121,7 +124,7 @@ func main() {
 	}()
 
 	txids, err := rdb.ZRangeArgs(ctx, redis.ZRangeArgs{
-		Key:     "opns",
+		Key:     "bap",
 		Stop:    "+inf",
 		Start:   "-inf",
 		ByScore: true,
@@ -129,8 +132,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to query Redis: %v", err)
 	}
-
-	txids = append([]string{"58b7558ea379f24266c7e2f5fe321992ad9a724fd7a87423ba412677179ccb25"}, txids...)
 
 	for _, txidStr := range txids {
 		select {
@@ -161,16 +162,13 @@ func main() {
 				taggedBeef := overlay.TaggedBEEF{
 					Topics: []string{tm},
 				}
-				// log.Println("Tx Loaded", tx.TxID().String(), "in", time.Since(start))
 				logTime := time.Now()
 				if taggedBeef.Beef, err = beef.AtomicBytes(txid); err != nil {
 					log.Fatalf("Failed to generate BEEF: %v", err)
 				} else if admit, err := e.Submit(ctx, taggedBeef, engine.SubmitModeHistorical, nil); err != nil {
 					log.Fatalf("Failed to submit transaction: %v", err)
 				} else {
-					// log.Println("Submitted generated", tx.TxID().String(), "in", time.Since(logTime))
-					// logTime = time.Now()
-					if err := rdb.ZRem(ctx, "opns", txidStr).Err(); err != nil {
+					if err := rdb.ZRem(ctx, "bap", txidStr).Err(); err != nil {
 						log.Fatalf("Failed to delete from queue: %v", err)
 					}
 					log.Println("Processed", txid, "in", time.Since(logTime), "as", admit[tm].OutputsToAdmit)
@@ -178,7 +176,6 @@ func main() {
 						tx:  1,
 						out: len(admit[tm].OutputsToAdmit),
 					}
-					// start = time.Now()
 				}
 			}
 		}

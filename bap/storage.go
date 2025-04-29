@@ -5,21 +5,17 @@ import (
 	"encoding/json"
 
 	"github.com/b-open-io/overlay/storage"
+	"github.com/redis/go-redis/v9"
 )
 
-var ProfileKey = "profile"
-var IdentityKey = "identity"
-var AttestationKey = "attestation"
-func IdentityAddressKey(idKey string) string {
-	return "adds:" + idKey
-}
-
 type BAPStorage struct {
-	storage.RedisStorage
+	*storage.RedisStorage
 }
 
 func (s *BAPStorage) LoadIdentityById(ctx context.Context, id string) (*Identity, error) {
-	if b, err := s.DB.HGet(ctx, IdentityKey, id).Bytes(); err != nil {
+	if b, err := s.DB.HGet(ctx, IdentityKey, id).Bytes(); err == redis.Nil {
+		return nil, nil
+	} else if err != nil {
 		return nil, err
 	} else {
 		var identity Identity
@@ -31,7 +27,19 @@ func (s *BAPStorage) LoadIdentityById(ctx context.Context, id string) (*Identity
 }
 
 func (s *BAPStorage) LoadIdentityByAddress(ctx context.Context, address string) (*Identity, error) {
-	return nil, nil
+	if idkey, err := s.DB.HGet(ctx, AddressIdentityKey, address).Result(); err == redis.Nil {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	} else if b, err := s.DB.HGet(ctx, IdentityKey, idkey).Bytes(); err != nil {
+		return nil, err
+	} else {
+		var identity Identity
+		if err := json.Unmarshal(b, &identity); err != nil {
+			return nil, err
+		}
+		return &identity, nil
+	}
 }
 
 func (s *BAPStorage) SaveIdentity(ctx context.Context, id *Identity) error {
@@ -41,16 +49,20 @@ func (s *BAPStorage) SaveIdentity(ctx context.Context, id *Identity) error {
 		_, err := s.DB.Pipelined(ctx, func(p redis.Pipeliner) error {
 			if err := p.HSet(ctx, IdentityKey, id.IDKey, b).Err(); err != nil {
 				return err
-			} else if err := p.ZAdd(ctx,'')
+			} else if err := p.HSet(ctx, AddressIdentityKey, id.CurrentAddress, id.IDKey).Err(); err != nil {
+				return err
+			}
 
 			return nil
-		}
+		})
 		return err
 	}
 }
 
 func (s *BAPStorage) LoadAttestation(ctx context.Context, urnHash string) (*Attestation, error) {
-	if b, err := s.DB.HGet(ctx, AttestationKey, urnHash).Bytes(); err != nil {
+	if b, err := s.DB.HGet(ctx, AttestationKey, urnHash).Bytes(); err == redis.Nil {
+		return nil, nil
+	} else if err != nil {
 		return nil, err
 	} else {
 		var att Attestation
@@ -66,6 +78,16 @@ func (s *BAPStorage) SaveAttestation(ctx context.Context, att *Attestation) erro
 		return err
 	} else {
 		return s.DB.HSet(ctx, AttestationKey, att.Id, b).Err()
+	}
+}
+
+func (s *BAPStorage) LoadProfile(ctx context.Context, bapId string) (json.RawMessage, error) {
+	if msg, err := s.DB.HGet(ctx, ProfileKey, bapId).Bytes(); err == redis.Nil {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	} else {
+		return msg, nil
 	}
 }
 

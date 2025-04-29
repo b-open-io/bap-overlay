@@ -12,7 +12,7 @@ import (
 
 type LookupService struct {
 	*events.RedisEventLookup
-	storage BAPStorage
+	storage *BAPStorage
 }
 
 func NewLookupService(connString string, storage *BAPStorage, topic string) (*LookupService, error) {
@@ -21,13 +21,12 @@ func NewLookupService(connString string, storage *BAPStorage, topic string) (*Lo
 	} else {
 		return &LookupService{
 			RedisEventLookup: eventsLookup,
-			storage:          *storage,
+			storage:          storage,
 		}, nil
 	}
 }
 
 func (l *LookupService) OutputAdded(ctx context.Context, outpoint *overlay.Outpoint, topic string, beef []byte) error {
-	// outputEvents := make([]string, 0, 5)
 	_, tx, _, err := transaction.ParseBeef(beef)
 	if err != nil {
 		return err
@@ -129,19 +128,6 @@ func (l *LookupService) OutputAdded(ctx context.Context, outpoint *overlay.Outpo
 			l.storage.SaveProfile(ctx, bap.IDKey, bap.Profile)
 		}
 	}
-
-	var blockHeight uint32
-	var blockIdx uint64
-	if tx.MerklePath != nil {
-		blockHeight = tx.MerklePath.BlockHeight
-		for _, leaf := range tx.MerklePath.Path[0] {
-			if leaf.Hash != nil && leaf.Hash.Equal(outpoint.Txid) {
-				blockIdx = leaf.Offset
-				break
-			}
-		}
-	}
-	l.SaveEvents(ctx, outpoint, outputEvents, blockHeight, blockIdx)
 	return nil
 }
 

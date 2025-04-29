@@ -41,9 +41,9 @@ func main() {
 	var sub *junglebus.Subscription
 	txcount := 0
 	var err error
-	fromBlock := uint64(800000)
+	fromBlock := uint64(590000)
 	fromPage := uint64(0)
-	topicId := "408a5b6f79b151ad67d1c3a2f84256ca074c78faf31e64a0cab8e9707f360b37"
+	topicId := "28855f0909e97e9186e218dc62014112c571dca195ea25e1e8769d4a69489549"
 	if progress, err := rdb.HGet(ctx, "progress", topicId).Int(); err == nil {
 		fromBlock = uint64(progress)
 		log.Println("Resuming from block", fromBlock)
@@ -58,7 +58,7 @@ func main() {
 			OnTransaction: func(txn *models.TransactionResponse) {
 				txcount++
 				log.Printf("[TX]: %d - %d: %d %s\n", txn.BlockHeight, txn.BlockIndex, len(txn.Transaction), txn.Id)
-				if err := rdb.ZAdd(ctx, "opns", redis.Z{
+				if err := rdb.ZAdd(ctx, "bap", redis.Z{
 					Member: txn.Id,
 					Score:  float64(txn.BlockHeight)*1e9 + float64(txn.BlockIndex),
 				}).Err(); err != nil {

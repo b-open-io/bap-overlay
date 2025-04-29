@@ -19,8 +19,6 @@ import (
 
 	"github.com/b-open-io/overlay/storage"
 	"github.com/b-open-io/overlay/util"
-	"github.com/bsv-blockchain/go-sdk/chainhash"
-	"github.com/bsv-blockchain/go-sdk/transaction"
 	"github.com/bsv-blockchain/go-sdk/transaction/broadcaster"
 	"github.com/bsv-blockchain/go-sdk/transaction/chaintracker/headers_client"
 	"github.com/gofiber/fiber/v2"
@@ -85,10 +83,10 @@ func main() {
 		log.Fatalf("Failed to initialize storage: %v", err)
 	}
 	defer store.Close()
-
+	bapStorage := &bap.BAPStorage{RedisStorage: store}
 	lookupService, err := bap.NewLookupService(
 		os.Getenv("REDIS"),
-		store,
+		bapStorage,
 		"tm_bap",
 	)
 	if err != nil {
@@ -97,7 +95,9 @@ func main() {
 	tm := "tm_bap"
 	e = &engine.Engine{
 		Managers: map[string]engine.TopicManager{
-			tm: &bap.TopicManager{},
+			tm: &bap.TopicManager{
+				Storage: bapStorage,
+			},
 		},
 		LookupServices: map[string]engine.LookupService{
 			"ls_bap": lookupService,
@@ -134,70 +134,6 @@ func main() {
 
 	httpServer.Router.Get("", func(c *fiber.Ctx) error {
 		return c.SendString("Hello, World!")
-	})
-	httpServer.Router.Get("/owner/:name", func(c *fiber.Ctx) error {
-		name := c.Params("name")
-		if name == "" {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "Missing name",
-			})
-		} else if owner, err := lookupService.Owner(c.Context(), name); err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": err.Error(),
-			})
-		} else if owner == nil {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-				"error": "No owner found",
-			})
-		} else {
-			return c.JSON(owner)
-		}
-	})
-
-	httpServer.Router.Get("/mine/:name", func(c *fiber.Ctx) error {
-		name := c.Params("name")
-		if name == "" {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "Missing name",
-			})
-		} else if outpoint, err := lookupService.Mine(c.Context(), name); err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": err.Error(),
-			})
-		} else if outpoint == nil {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-				"error": "No outpoint found",
-			})
-		} else {
-			return c.JSON(fiber.Map{
-				"outpoint": outpoint,
-			})
-		}
-	})
-
-	httpServer.Router.Post("/arc-ingest", func(c *fiber.Ctx) error {
-		var status broadcaster.ArcResponse
-		if err := c.BodyParser(&status); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "Invalid request",
-			})
-		} else if txid, err := chainhash.NewHashFromHex(status.Txid); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "Invalid txid",
-			})
-		} else if merklePath, err := transaction.NewMerklePathFromHex(status.MerklePath); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "Invalid merkle path",
-			})
-		} else if err := e.HandleNewMerkleProof(c.Context(), txid, merklePath); err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": err.Error(),
-			})
-		} else {
-			return c.JSON(fiber.Map{
-				"status": "success",
-			})
-		}
 	})
 
 	httpServer.Router.Get("/subscribe/:topics", func(c *fiber.Ctx) error {

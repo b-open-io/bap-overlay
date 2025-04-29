@@ -5,7 +5,6 @@ go 1.24.2
 require (
 	github.com/4chain-ag/go-overlay-services v0.0.0-00010101000000-000000000000
 	github.com/GorillaPool/go-junglebus v0.2.14
-	github.com/b-open-io/opns-overlay v0.0.0-20250415204505-315a12429cf6
 	github.com/b-open-io/overlay v0.0.0-20250409215804-0af5fcd6d003
 	github.com/bitcoin-sv/go-templates v0.0.0-00010101000000-000000000000
 	github.com/bsv-blockchain/go-sdk v1.1.22
