@@ -21,12 +21,12 @@ import (
 	"github.com/4chain-ag/go-overlay-services/pkg/core/engine"
 	"github.com/4chain-ag/go-overlay-services/pkg/server"
 	"github.com/b-open-io/bap-overlay/bap"
-
 	"github.com/b-open-io/overlay/storage"
 	"github.com/b-open-io/overlay/util"
 	"github.com/bsv-blockchain/go-sdk/transaction/broadcaster"
 	"github.com/bsv-blockchain/go-sdk/transaction/chaintracker/headers_client"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 )
@@ -141,9 +141,7 @@ func main() {
 
 	httpServer, err := server.New(
 		server.WithEngine(e),
-		// server.WithRouter(func(r fiber.Router) {
-
-		// }),
+		server.WithFiberMiddleware(logger.New()),
 		server.WithConfig(&server.Config{
 			Port: PORT,
 		}),
