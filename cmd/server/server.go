@@ -89,6 +89,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to initialize storage: %v", err)
 	}
+	if r, err := store.DB.Ping(ctx).Result(); err != nil {
+		log.Fatalf("Failed to ping Redis: %v", err)
+	} else {
+		log.Printf("Connected to Redis: %s", r)
+	}
 	defer store.Close()
 	bapStorage := &bap.BAPStorage{RedisStorage: store}
 	lookupService, err := bap.NewLookupService(
